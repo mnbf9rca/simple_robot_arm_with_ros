@@ -10,7 +10,7 @@
 // designed to work with a simple 4DOF robot arm      //
 // with 4 servo motors                                //
 // which receives a joint angle published via ROS for //
-// one or more servos                                 //
+// one or more servos as <servo>/<angle> on /servo    //
 // MIT licence                                        //
 // from https://github.com/mnbf9rca/simple_robot_arm  //
 //                                                    //
@@ -87,6 +87,7 @@ void servo_cb(const std_msgs::String &cmd_msg)
   // only when this returned value is non-negative and less than n, the string has been completely written
   // http://www.cplusplus.com/reference/cstdio/snprintf/
   cx = snprintf(instruction, instructionAlloc, cmd_msg.data);
+  // check that the instruction fitted in to the buffer
   if ((cx < 0) || (cx > instructionAlloc - 1)) //less 1 for \n
   {
     publishInt("Message contains too many characters", cx);
@@ -197,7 +198,6 @@ void setup()
   Particle.variable("targetAngle[1]", targetAngle[1]);
   Particle.variable("targetAngle[2]", targetAngle[2]);
   Particle.variable("targetAngle[3]", targetAngle[3]);
-  Particle.variable("targetAngle", targetAngle);
   pinMode(D7, OUTPUT);
   toggleServos();
 }

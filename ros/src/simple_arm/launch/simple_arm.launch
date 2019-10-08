@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find simple_arm)/launch/spawn_simple_arm_sdf.launch">
+    <arg name="robot_name" value="simple_arm"/>
+    <arg name="x" value="0.0"/>
+    <arg name="y" value="0.0"/>
+    <arg name="z" value="1.0"/>
+    <arg name="sdf_robot_file" value="$(find simple_arm)/sdf/simple_arm.sdf"/>
+  </include>
+</launch>
