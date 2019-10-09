@@ -206,7 +206,7 @@
                 <geometry>
                     <box>
                         <!-- collission stops just before the ends to accomodate the joints-->
-                        <size>0.083 0.025 0.012</size>
+                        <size>0.012 0.025 0.083 </size>
                     </box>
                 </geometry>
             </collision>
@@ -214,7 +214,7 @@
             <visual name='vertical_arm_visual'>
                 <geometry>
                     <box>
-                        <size>0.093 0.025 0.012</size>
+                        <size>0.012 0.025 0.093</size>
                     </box>
                 </geometry>
             </visual>
@@ -251,7 +251,7 @@
                 <geometry>
                     <box>
                         <!-- collission stops just before the ends to accomodate the joints-->
-                        <size>0.080 0.003 0.00785 </size>
+                        <size>0.003 0.00785 0.080</size>
                     </box>
                 </geometry>
             </collision>
@@ -259,7 +259,7 @@
             <visual name='link_arm_visual'>
                 <geometry>
                     <box>
-                        <size>0.0875 0.003 0.00785 </size>
+                        <size>0.003 0.00785 0.0875</size>
                     </box>
                 </geometry>
             </visual>
@@ -268,12 +268,12 @@
         <!-- end link arm -->
 
         <!-- begin top_link -->
-<TODO - these joints dont work>
+
         <joint name="top_link_link_arm_joint" type="revolute">
             <axis>
                 <xyz>0 1 0</xyz>
             </axis>
-            <pose>-0.04375 0 0 0 0 0</pose>
+            <pose>0.067 0.00785 0.0875 0 0 0</pose>
             <child>link_arm</child>
             <parent>top_link</parent>
         </joint>

@@ -17,10 +17,13 @@
         <arg name="headless" value="$(arg headless)"/>
         <arg name="debug" value="$(arg debug)"/>
     </include>
-
-    <include file="$(find simple_arm)/launch/simple_arm.launch"/>
     <!--spawn a robot in gazebo world-->
+    <include file="$(find simple_arm)/launch/simple_arm_xacro.launch"/>
 
-    <!-- <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -param robot_description -model simple_arm"/>-->
+    <!-- RVIz -->
+    <!--launch rviz-->
+    <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find training_world)/rviz/simple.rviz"/>
+    <!-- TF for rviz-->
+    <node pkg="tf" type="static_transform_publisher" name="tf_static" args="0 0 0 0 0 0 /map /robot_footprint 10"/>
 
 </launch>
