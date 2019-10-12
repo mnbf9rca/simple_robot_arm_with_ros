@@ -119,7 +119,7 @@ void ClosedLoopPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
          ignition::math::Vector3d jointaxis = ignition::math::Vector3d(0,1,0);
          j->SetAxis(0,jointaxis);
 
-         printf("\n__ClosedLoopPlugin Load finished___\n");
+         ROS_INFO("ClosedLoopPlugin Load finished for %s.", joint_name_.c_str());
 
 }
 
