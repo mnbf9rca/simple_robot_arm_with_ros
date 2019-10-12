@@ -119,9 +119,6 @@
     <visual name='rotating_block_vertical_arm_axis'>
       <!-- no collission for this part as it's just for our visual reference -->
       <origin xyz="-0.023 0 0.01825" rpy="1.573301 0 0"/>
-      <material name="black">
-        <color rgba="0.0 0.0 0.0 1.0"/>
-      </material>
       <geometry>
         <cylinder length="0.06" radius="0.005"/>
       </geometry>
