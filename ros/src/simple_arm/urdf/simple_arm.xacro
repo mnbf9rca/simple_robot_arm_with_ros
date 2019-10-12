@@ -159,7 +159,7 @@
   <joint name="vertical_arm_forearm_joint" type="revolute">
     <limit lower="-.78" upper="1.7" effort="10" velocity="3"/>
     <axis xyz="0 1 0"/>
-    <origin xyz="0 0.0 -0.103" rpy="0 -2.0944 0"/>
+    <origin xyz="0 0.0 -0.103" rpy="0 -2.11 0"/>
     <parent link="vertical_arm"/>
     <child link="forearm"/>
   </joint>
@@ -187,7 +187,7 @@
   <joint name="actuator_forearm_joint" type="revolute">
     <limit lower="-.78" upper="1.7" effort="10" velocity="3"/>
     <axis xyz="0 1 0"/>
-    <origin xyz="0 0.0 -0.088" rpy="0 0.523599 0"/>
+    <origin xyz="0 0.0 -0.088" rpy="0 0.57 0"/>
     <child link="actuator_body"/>
     <parent link="forearm"/>
   </joint>
