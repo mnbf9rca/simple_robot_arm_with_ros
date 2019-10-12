@@ -1,10 +1,11 @@
 
 # Simple Robot Arm with ROS
 simple 4DOF robot arm operated by ROS. Implements [rosserial_python](http://wiki.ros.org/rosserial_python) on the server, and [rosserial_arduino](http://wiki.ros.org/rosserial_arduino) on the Photon.
-I bought this robot from Banggood:
+I bought this robot from Banggood:<br/><br/>
+
 ![a robot arm with 4dof](docs/robot_from_banggood.webp)
 
-The original model has a closed loop; i simplified this to remove the closed loop and plan to manage the offset joint angles through code.
+The original model has a closed loop; i simplified this to remove the closed loop and plan to manage the offset joint angles through code.<br/><br/>
 ![a simulated robot arm with 5dof](docs/simplified_robot_model.png)
 
 # task list
