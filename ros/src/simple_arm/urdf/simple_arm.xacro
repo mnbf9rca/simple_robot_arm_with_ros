@@ -3,12 +3,12 @@
 <robot name="simple_arm" 
   xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- dummy link to allow arm_footprint to have intertia-->
-  <link name="robot_footprint"></link>
-  <joint name="robot_footprint_joint" type="fixed">
-    <origin xyz="0 0 0" rpy="0 0 0" />
-    <parent link="robot_footprint"/>
-    <child link="arm_footprint" />
+  <!-- Used for fixing robot to Gazebo 'base_link' -->
+  <link name="world"/>
+
+  <joint name="fixed" type="fixed">
+    <parent link="world"/>
+    <child link="arm_footprint"/>
   </joint>
 
   <!-- footprint tile -->
@@ -35,17 +35,16 @@
   </link>
   <!-- begin base block -->
   <joint name="arm_footprint_base_block_joint" type="fixed">
-    <origin xyz="0.035 0 0.014"/>
+    <origin xyz="0.033 0 0.015"/>
     <child link="base_block" />
     <parent link="arm_footprint" />
   </joint>
 
   <link name='base_block'>
-    <collision name='base_block_collision'>
-      <geometry>
-        <box size="0.06 0.06 0.028"/>
-      </geometry>
-    </collision>
+    <inertial>
+      <mass value="0.05" />
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
     <visual name='base_block_visual'>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -57,37 +56,18 @@
   <!-- end base block -->
   <!-- begin rotating block -->
   <joint name="base_block_rotating_block_joint" type="revolute">
-    <limit upper="1.57" lower="-1.57" effort="1" velocity="1000.00"/>
-
+    <limit lower="-1.54" upper="1.54" effort="10" velocity="3"/>
     <axis xyz="0 0 1"/>
-    <!--<pose>-0.035 0 0.25 0 0 0</pose>-->
-    <origin xyz="0 0 0.028" rpy="0 0 0" />
+    <origin xyz="0 0 0.019" rpy="0 0 0" />
     <child link="rotating_block"/>
     <parent link="base_block"/>
   </joint>
   <link name='rotating_block'>
-    <collision name='rotating_block_collision_right_raised'>
-      <origin xyz="0.02 0.0285 0.045" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.01 0.003 0.01"/>
-      </geometry>
-    </collision>
-    <visual name='rotating_block_visual_right_raised'>
-      <origin xyz="0.02 0.0285 0.045" rpy="0 0 0"/>
-      <material name="black">
-        <color rgba="0.0 0.0 0.0 1.0"/>
-      </material>
-      <geometry>
-        <box size="0.01 0.003 0.01"/>
-      </geometry>
-    </visual>
+    <inertial>
+      <mass value="0.05" />
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
 
-    <collision name='rotating_block_collision_right'>
-      <origin xyz="0.02 0.0285 0.02" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.06 0.003 0.04"/>
-      </geometry>
-    </collision>
     <visual name='rotating_block_visual_right'>
       <origin xyz="0 0.0285 0.02" rpy="0 0 0"/>
       <geometry>
@@ -95,25 +75,13 @@
       </geometry>
     </visual>
 
-    <collision name='rotating_block_collision_left'>
-      <origin xyz="0 -0.0285 0.02" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.06 0.003 0.04"/>
-      </geometry>
-    </collision>
     <visual name='rotating_block_visual_left'>
       <origin xyz="0 -0.0285 0.02" rpy="0 0 0"/>
-
       <geometry>
         <box size="0.06 0.003 0.04"/>
       </geometry>
     </visual>
-    <collision name='rotating_block_collision_base'>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.06 0.06 0.003"/>
-      </geometry>
-    </collision>
+
     <visual name='rotating_block_visual_base'>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -123,7 +91,7 @@
 
     <visual name='rotating_block_vertical_arm_axis'>
       <!-- no collission for this part as it's just for our visual reference -->
-      <origin xyz="-0.023 0 0.01925" rpy="1.573301 0 0"/>
+      <origin xyz="-0.023 0 0.01825" rpy="1.573301 0 0"/>
       <material name="black">
         <color rgba="0.0 0.0 0.0 1.0"/>
       </material>
@@ -135,94 +103,129 @@
   </link>
   <!-- end rotating block -->
   <!-- begin vertical arm -->
-  <joint name="rotating_block_vertical_arm_elbow_joint" type="revolute">
+  <joint name="rotating_block_vertical_arm_joint" type="revolute">
+    <limit lower="-1.54" upper="0.6" effort="10" velocity="3"/>
     <axis xyz="0 1 0"/>
-    <limit effort="30" velocity="1.0" lower="-0.785" upper="1.56" />
-
-
-    <origin xyz="-0.023 0.009 0.01925" rpy="0 3.14 0"/>
+    <origin xyz="-0.023 0.008 0.01825" rpy="0 3.14 0"/>
     <child link="vertical_arm"/>
     <parent link="rotating_block"/>
   </joint>
 
   <link name='vertical_arm'>
-    <self_collide>1</self_collide>
-
-    <collision name='vertical_arm_collision'>
-      <origin xyz="0 0 -0.0415" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.012 0.025 0.083"/>
-      </geometry>
-    </collision>
-
+    <inertial>
+      <mass value="0.05" />
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
     <visual name='vertical_arm_visual'>
-      <origin xyz="0 0 -0.0465" rpy="0 0 0"/>
+      <origin xyz="0 0 -0.0515" rpy="0 0 0"/>
       <geometry>
-        <box size="0.012 0.025 0.093"/>
+        <box size="0.012 0.025 0.103"/>
       </geometry>
     </visual>
 
   </link>
-
-
   <!-- end vertical arm -->
-  <!-- begin link arm -->
-
-  <joint name="rotating_block_link_arm_elbow_joint" type="revolute">
-    <limit upper="1.57" lower="-1.57" effort="1" velocity="1000.00"/>
+  <!-- begin forearm -->
+  <joint name="vertical_arm_forearm_joint" type="revolute">
+    <limit lower="-.78" upper="1.7" effort="10" velocity="3"/>
     <axis xyz="0 1 0"/>
-    <origin xyz="0.02 0.0315 0.045" rpy="0 3.14 0"/>
-    <child link="link_arm"/>
-    <parent link="rotating_block"/>
+    <origin xyz="0 0.0 -0.103" rpy="0 -2.0944 0"/>
+    <parent link="vertical_arm"/>
+    <child link="forearm"/>
   </joint>
-  <link name='link_arm'>
-    <self_collide>1</self_collide>
-    <collision name='link_arm_collision'>
-      <origin xyz="0 0 -0.04" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.003 0.00785 0.080"/>
-      </geometry>
-    </collision>
 
-    <visual name='link_arm_visual'>
-      <origin xyz="0 0 -0.04375" rpy="0 0 0"/>
+  <link name='forearm'>
+    <inertial>
+      <mass value="0.05" />
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual name='forearm_visual'>
+      <origin xyz="0 0 -0.044" rpy="0 0 0"/>
       <geometry>
-        <box size="0.003 0.00785 0.0875"/>
+        <box size="0.012 0.0305 0.088"/>
+      </geometry>
+    </visual>
+
+  </link>
+  <!-- end forearm -->
+  <!-- begin actuator -->
+  <joint name="actuator_forearm_joint" type="revolute">
+    <limit lower="-.78" upper="1.7" effort="10" velocity="3"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="0 0.0 -0.088" rpy="0 0.523599 0"/>
+    <child link="actuator_body"/>
+    <parent link="forearm"/>
+  </joint>
+
+  <link name='actuator_body'>
+    <inertial>
+      <mass value="0.05" />
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual name='actuator_body_visual'>
+      <origin xyz="0 0 -0.008" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.024 0.050"/>
+      </geometry>
+    </visual>
+
+  </link>
+  <joint name="left_gripper_actuator_body" type="revolute">
+    <limit lower="-.78" upper="0" effort="10" velocity="3"/>
+    <axis xyz="1 0 0"/>
+    <origin xyz="0 -0.0109 -0.029 " rpy="0 0 0"/>
+    <parent link="actuator_body"/>
+    <child link="left_gripper"/>
+  </joint>
+
+  <link name='left_gripper'>
+    <inertial>
+      <mass value="0.005" />
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual name='left_gripper_visual'>
+      <origin xyz="0 0 -0.0205" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.003 0.01 0.041"/>
+      </geometry>
+    </visual>
+    <visual name='left_gripper_tip_visual'>
+      <origin xyz="0 .0079 -0.035" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.003 0.005 0.01"/>
+      </geometry>
+    </visual>
+
+  </link>
+  <joint name="right_gripper_actuator_body" type="revolute">
+    <limit lower="0" upper="0.78" effort="10" velocity="3"/>
+    <axis xyz="1 0 0"/>
+    <origin xyz="0 0.0109 -0.029 " rpy="0 0 0"/>
+    <parent link="actuator_body"/>
+    <child link="right_gripper"/>
+  </joint>
+
+  <link name='right_gripper'>
+    <inertial>
+      <mass value="0.005" />
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+    </inertial>
+    <visual name='right_gripper_side_visual'>
+      <origin xyz="0 0 -0.0205" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.003 0.01 0.041"/>
+      </geometry>
+    </visual>
+    <visual name='right_gripper_tip_visual'>
+      <origin xyz="0 -.0079 -0.035" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.003 0.005 0.01"/>
       </geometry>
     </visual>
 
   </link>
 
-  <!-- end link arm -->
-  <!-- begin top link -->
+  <!-- end actuator-->
 
-  <joint name="top_link_link_arm_joint" type="revolute">
-    <limit upper="1.57" lower="-1.57" effort="1" velocity="1000.00"/>
-    <axis xyz="0 1 0"/>
-    <origin xyz="0 -0.005 -0.0794" rpy="0 0 3.14"/>
-    <parent link="link_arm"/>
-    <child link="top_link"/>
-  </joint>
-
-
-  <plugin name="Myrobot_ClosedLoopPlugin" filename="libpegasus_gazebo_closed_loop_plugin.so">
-    <joint>top_link_link_arm_joint</joint>
-    <child>top_link</child>
-    <parent>link_arm</parent>
-    <rotation>0 0 3.14</rotation>
-    <position>0.0 0 -0.108 </position>
-  </plugin>
-
-  <link name='top_link'>
-    <visual name='top_link_visual'>
-      <origin xyz="-0.025 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.054 0.003 0.03"/>
-
-      </geometry>
-    </visual>
-
-  </link>
-  <!-- end top link -->
 
 </robot>

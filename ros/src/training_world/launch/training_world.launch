@@ -24,6 +24,6 @@
     <!--launch rviz-->
     <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find training_world)/rviz/simple.rviz"/>
     <!-- TF for rviz-->
-    <node pkg="tf" type="static_transform_publisher" name="tf_static" args="0 0 0 0 0 0 /map /robot_footprint 10"/>
+    <node pkg="tf" type="static_transform_publisher" name="tf_static" args="0 0 0 0 0 0 /map /world 10"/>
 
 </launch>
