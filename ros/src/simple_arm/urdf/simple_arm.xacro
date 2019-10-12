@@ -16,7 +16,7 @@
     <inertial>
       <mass value="0.1"/>
       <origin xyz="0.0 0 0" rpy="0 0 0"/>
-      <inertia ixx="100" ixy="0" ixz="0" iyy="100" iyz="0" izz="100" />
+      <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
 
     <collision name='arm_footprint_collision'>
@@ -43,7 +43,7 @@
   <link name='base_block'>
     <inertial>
       <mass value="0.05" />
-      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+      <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
     <visual name='base_block_visual'>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -51,6 +51,12 @@
         <box size="0.06 0.06 0.028"/>
       </geometry>
     </visual>
+    <collision name='base_block_collision'>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.06 0.06 0.028"/>
+      </geometry>
+    </collision>
 
   </link>
   <!-- end base block -->
@@ -65,7 +71,7 @@
   <link name='rotating_block'>
     <inertial>
       <mass value="0.05" />
-      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+      <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
 
     <visual name='rotating_block_visual_right'>
@@ -88,6 +94,27 @@
         <box size="0.06 0.06 0.003"/>
       </geometry>
     </visual>
+    <collision name='rotating_block_collision_right'>
+      <origin xyz="0 0.0285 0.02" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.06 0.003 0.04"/>
+      </geometry>
+    </collision>
+
+    <collision name='rotating_block_collision_left'>
+      <origin xyz="0 -0.0285 0.02" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.06 0.003 0.04"/>
+      </geometry>
+    </collision>
+
+    <collision name='rotating_block_collision_base'>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.06 0.06 0.003"/>
+      </geometry>
+    </collision>
+
 
     <visual name='rotating_block_vertical_arm_axis'>
       <!-- no collission for this part as it's just for our visual reference -->
@@ -114,7 +141,7 @@
   <link name='vertical_arm'>
     <inertial>
       <mass value="0.05" />
-      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+      <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
     <visual name='vertical_arm_visual'>
       <origin xyz="0 0 -0.0515" rpy="0 0 0"/>
@@ -122,6 +149,12 @@
         <box size="0.012 0.025 0.103"/>
       </geometry>
     </visual>
+    <collision name='vertical_arm_collision'>
+      <origin xyz="0 0 -0.0515" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.012 0.025 0.103"/>
+      </geometry>
+    </collision>    
 
   </link>
   <!-- end vertical arm -->
@@ -137,7 +170,7 @@
   <link name='forearm'>
     <inertial>
       <mass value="0.05" />
-      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+      <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
     <visual name='forearm_visual'>
       <origin xyz="0 0 -0.044" rpy="0 0 0"/>
@@ -145,7 +178,12 @@
         <box size="0.012 0.0305 0.088"/>
       </geometry>
     </visual>
-
+    <collision name='forearm_collision'>
+      <origin xyz="0 0 -0.044" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.012 0.0305 0.088"/>
+      </geometry>
+    </collision>
   </link>
   <!-- end forearm -->
   <!-- begin actuator -->
@@ -160,7 +198,7 @@
   <link name='actuator_body'>
     <inertial>
       <mass value="0.05" />
-      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+      <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
     <visual name='actuator_body_visual'>
       <origin xyz="0 0 -0.008" rpy="0 0 0"/>
@@ -168,6 +206,12 @@
         <box size="0.01 0.024 0.050"/>
       </geometry>
     </visual>
+    <collision name='actuator_body_collision'>
+      <origin xyz="0 0 -0.008" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.024 0.050"/>
+      </geometry>
+    </collision>    
 
   </link>
   <joint name="left_gripper_actuator_body" type="revolute">
@@ -181,7 +225,7 @@
   <link name='left_gripper'>
     <inertial>
       <mass value="0.005" />
-      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+      <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
     <visual name='left_gripper_visual'>
       <origin xyz="0 0 -0.0205" rpy="0 0 0"/>
@@ -195,7 +239,18 @@
         <box size="0.003 0.005 0.01"/>
       </geometry>
     </visual>
-
+    <collision name='left_gripper_collision'>
+      <origin xyz="0 0 -0.0205" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.003 0.01 0.041"/>
+      </geometry>
+    </collision>
+    <collision name='left_gripper_tip_collision'>
+      <origin xyz="0 .0079 -0.035" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.003 0.005 0.01"/>
+      </geometry>
+    </collision>
   </link>
   <joint name="right_gripper_actuator_body" type="revolute">
     <limit lower="0" upper="0.78" effort="10" velocity="3"/>
@@ -208,7 +263,7 @@
   <link name='right_gripper'>
     <inertial>
       <mass value="0.005" />
-      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+      <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
     <visual name='right_gripper_side_visual'>
       <origin xyz="0 0 -0.0205" rpy="0 0 0"/>
@@ -222,7 +277,18 @@
         <box size="0.003 0.005 0.01"/>
       </geometry>
     </visual>
-
+    <collision name='right_gripper_side_collision'>
+      <origin xyz="0 0 -0.0205" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.003 0.01 0.041"/>
+      </geometry>
+    </collision>
+    <collision name='right_gripper_tip_collision'>
+      <origin xyz="0 -.0079 -0.035" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.003 0.005 0.01"/>
+      </geometry>
+    </collision>
   </link>
 
   <!-- end actuator-->
