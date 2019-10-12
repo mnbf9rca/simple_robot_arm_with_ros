@@ -1,7 +1,7 @@
 
 # Simple Robot Arm with ROS
 simple 4DOF robot arm operated by ROS. Implements [rosserial_python](http://wiki.ros.org/rosserial_python) on the server, and [rosserial_arduino](http://wiki.ros.org/rosserial_arduino) on the Photon.
-I bought this robot from Banggood:<br/><br/>
+I bought this robot from Banggood (but without the controller):<br/><br/>
 
 ![a robot arm with 4dof](docs/robot_from_banggood.webp)
 
