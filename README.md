@@ -2,6 +2,9 @@
 # Simple Robot Arm with ROS
 simple 4DOF robot arm operated by ROS. Implements [rosserial_python](http://wiki.ros.org/rosserial_python) on the server, and [rosserial_arduino](http://wiki.ros.org/rosserial_arduino) on the Photon.
 
+The original model has a closed loop; i simplified this and plan to manage the offset joint angles through code.
+![a robot arm with 5dof](docs/simplified_robot_model.png)
+
 # task list
 - create custom message type e.g.
 ```
