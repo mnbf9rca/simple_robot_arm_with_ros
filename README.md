@@ -17,7 +17,6 @@ uint16 target_angle
 ```
 - report current servo angles via joint state publisher
 - report when requested angle is outside min/max range for servo
-- build URDF for robot arm
 - document wiring etc.
 
 # Instructions
