@@ -13,7 +13,8 @@
 // ROS includes
 #define ROSSERIAL_ARDUINO_TCP
 #include <ros.h>
-#include <std_msgs/String.h> // we publish servo angles as a string #/###
+#include <std_msgs/String.h> // we publish servo angles (to hit) as a string (Currently) #/###
+#include <sensor_msgs/JointState.h>
 #define ROS_SERVO_TOPIC servo
 
 // ROS parameters
@@ -31,6 +32,28 @@ int servoMinMax[][2] = {{0, 180}, {30, 80}, {60, 150}, {5, 40}}; //set of {min, 
 int servoPins[] = {D0, D1, D2, D3};                              // which pin us each servo attached to
 
 int targetAngle[] = {90, 30, 90, 20};
+
+// joints
+char *jointNames[] = {"base_block_rotating_block_joint",
+                      "rotating_block_vertical_arm_joint",
+                      "vertical_arm_forearm_joint",
+                      "actuator_forearm_joint"};
+
+int number_of_joints = sizeof(jointNames);
+float currentAngle[] = {0, 0, 0, 0};
+
+// ROS handlers
+ros::NodeHandle nh;
+
+void updateCurrentAngles()
+{
+  // updates the currentAngle with the current servo value
+  // NB this is not complete. Joint angles need to be computed
+  for (int i = 0; i < 4; i++)
+  {
+    currentAngle[i] = servo[i].read();
+  }
+}
 
 // helper function to publish integers e.g. for debugging
 void publishInt(const char *name, int integer)
@@ -57,8 +80,63 @@ int midpoint(int minimum, int maximum)
   return minimum + ((maximum - minimum) / 2);
 }
 
+bool validateReceivedMessage(char *const &instruction, int(*cx), const int(*instructionAlloc))
+{
+  if ((*cx < 0) || (*cx > *instructionAlloc - 1)) //less 1 for \n
+  {
+    publishInt("Message contains too many characters", *cx);
+    return false;
+  }
+
+  // minimum instruction size is 3: 0/0
+  if (*cx < 3)
+  {
+    publishInt("Message contains too few characters", *cx);
+    return false;
+  }
+  // pull 1st char and cast to int
+  if (!isdigit(instruction[0]))
+  {
+    publishChar("first character not digit", &instruction[0]);
+    return false;
+  }
+
+  // check that 2nd char is /
+  if (!(instruction[1] == '/'))
+  {
+    publishChar("Second character not /", &instruction[1]);
+    return false;
+  }
+  // check that chars at 2 to cx are digits
+  for (int i = 2; i < *cx; i++)
+  {
+    if (!isdigit(instruction[i]))
+    {
+      publishChar("character not digit", &instruction[i]);
+      return false;
+    }
+  }
+  return true;
+}
+
+void extractServoAndSetAngle(char *const &instruction, int(*cx), const int(*instructionAlloc))
+{
+
+  char buf[*instructionAlloc - 2]; //hold the extracted characters in a buffer, maximum size is instructionAlloc-2
+  char *p = instruction + 2;       // create pointer to start 2 chars in
+  strncpy(buf, p, *cx - 2);
+
+  buf[sizeof(buf) - 1] = '\0'; //remember to null terminate string
+  int servoToSet = instruction[0] - '0';
+  // publishInt("found servo", servoToSet);
+  targetAngle[servoToSet] = atoi(buf);
+
+  // publishInt("setting to", targetAngle[servoToSet]);
+  setServos();
+}
+
 // ROS
-ros::NodeHandle nh;
+
 void servo_cb(const std_msgs::String &cmd_msg)
 {
   // expecting it to be int/int e.g. 1/120 to set servo 1 to 120
@@ -72,55 +150,33 @@ void servo_cb(const std_msgs::String &cmd_msg)
   // http://www.cplusplus.com/reference/cstdio/snprintf/
   cx = snprintf(instruction, instructionAlloc, cmd_msg.data);
   // check that the instruction fitted in to the buffer
-  if ((cx < 0) || (cx > instructionAlloc - 1)) //less 1 for \n
-  {
-    publishInt("Message contains too many characters", cx);
-    return;
-  }
-  
-  // minimum instruction size is 3: 0/0
-  if (cx < 3)
-  {
-    publishInt("Message contains too few characters", cx);
-    return;
-  }
 
-  // pull 1st char and cast to int
-  if (!isdigit(instruction[0]))
+  if (validateReceivedMessage(instruction, &cx, &instructionAlloc))
   {
-    publishChar("first character not digit", &instruction[0]);
-    return;
+    extractServoAndSetAngle(instruction, &cx, &instructionAlloc);
   }
-  int servoToSet = instruction[0] - '0';
-  // publishInt("found servo", servoToSet);
-
-  // check that 2nd char is /
-  if (!(instruction[1] == '/'))
-  {
-    publishChar("Second character not /", &instruction[1]);
-    return;
-  }
-  // check that chars at 2 to cx are digits
-  for (int i = 2; i < cx; i++)
-  {
-    if (!isdigit(instruction[i]))
-    {
-      publishChar("character not digit", &instruction[i]);
-      return;
-    }
-  }
-  char buf[instructionAlloc-2]; //hold the extracted characters in a buffer, maximum size is instructionAlloc-2
-  char *p = instruction + 2; // create pointer to start 2 chars in
-  strncpy(buf, p, cx - 2);
-
-  buf[sizeof(buf) - 1] = '\0'; //remember to null terminate string
-
-  targetAngle[servoToSet] = atoi(buf);
-
-  // publishInt("setting to", targetAngle[servoToSet]);
-  setServos();
 }
 ros::Subscriber<std_msgs::String> sub("servo", servo_cb);
+sensor_msgs::JointState joint_msg;
+std_msgs::String str_msg;
+
+ros::Publisher joint_publisher("test", &joint_msg);
+void publishJointAngles()
+{
+  if (!nh.connected())
+  {
+    return;
+  }
+  updateCurrentAngles();
+  joint_msg.header.stamp = nh.now();
+  joint_msg.name = jointNames;
+  joint_msg.name_length = 4;
+  joint_msg.position = currentAngle;
+  joint_msg.position_length = 4;
+  joint_publisher.publish(&joint_msg);
+  publishInt("here", 8);
+  // 1 = size of message queue
+}
 
 // servo control
 void setServos()
@@ -154,6 +210,29 @@ void toggleServos()
 
   setServos();
 }
+// Cloud functions must return int and take one String
+int cb_particle_servo(String extra)
+{
+
+  // expecting it to be int/int e.g. 1/120 to set servo 1 to 120
+  const int instructionAlloc = 6; // #/## +1 for \n
+  char instruction[instructionAlloc];
+
+  int cx;
+  // safely capture the first instructionAlloc characters of the string
+  //return is the number of characters printed (excluding the null byte used to end output to strings)
+  // only when this returned value is non-negative and less than n, the string has been completely written
+  // http://www.cplusplus.com/reference/cstdio/snprintf/
+  cx = snprintf(instruction, instructionAlloc, extra);
+  // check that the instruction fitted in to the buffer
+
+  if (validateReceivedMessage(instruction, &cx, &instructionAlloc))
+  {
+    extractServoAndSetAngle(instruction, &cx, &instructionAlloc);
+  }
+
+  return 0;
+}
 
 void setup()
 {
@@ -165,6 +244,8 @@ void setup()
     }
   }
 
+  Particle.function("particle_servo", cb_particle_servo);
+
   // Set the connection to rosserial socket server
   nh.getHardware()->setConnection(server, serverPort);
   nh.initNode();
@@ -173,15 +254,21 @@ void setup()
   ip.toString().toCharArray(IP, 16);
 
   publishChar("publishing from IP", IP);
-
   // subscribe to topic
   nh.subscribe(sub);
+  nh.advertise(joint_publisher); // advertise that we publish joint states
 
   // to let us monitor the values
   Particle.variable("targetAngle[0]", targetAngle[0]);
   Particle.variable("targetAngle[1]", targetAngle[1]);
   Particle.variable("targetAngle[2]", targetAngle[2]);
   Particle.variable("targetAngle[3]", targetAngle[3]);
+  /*
+  Particle.variable("currentAngle[0]", currentAngle[0]);
+  Particle.variable("currentAngle[1]", currentAngle[1]);
+  Particle.variable("currentAngle[2]", currentAngle[2]);
+  Particle.variable("currentAngle[3]", currentAngle[3]);
+  */
   pinMode(D7, OUTPUT);
   toggleServos();
 }
@@ -228,6 +315,7 @@ void loop()
       publishChar("Not Connected", "");
     }
   }
+  publishJointAngles();
   nh.spinOnce();
   delay(1);
 }

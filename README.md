@@ -16,7 +16,11 @@ uint16 servo_id
 uint16 target_angle
 ```
 - report current servo angles via joint state publisher
+    - started
+    - currently publishing servo angles
+    - need to convert these to joint angles
 - report when requested angle is outside min/max range for servo
+- refactor code to move to separate h files
 - document wiring etc.
 
 # Instructions
@@ -26,8 +30,10 @@ uint16 target_angle
 1. Launch `rosrun rosserial_python serial_node.py tcp`
 1. Publish something e.g. `rostopic pub /servo std_msgs/String 0/300` would send an instruction to set servo `0` to `300` (which is out of range).
 
-use ` check_urdf src/simple_arm/urdf/simple_arm.xacro ` to check URDF is valid
-use `roslaunch training_world training_world.launch` to launch world
+# notes (for me!)
+- good notes on creating arrays for rosserial at `http://wiki.ros.org/rosserial/Overview/Messages`
+- use ` check_urdf src/simple_arm/urdf/simple_arm.xacro ` to check URDF is valid
+- use `roslaunch training_world training_world.launch` to launch world
 
 
 
