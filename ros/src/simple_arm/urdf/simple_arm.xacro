@@ -130,7 +130,7 @@
   <joint name="rotating_block_vertical_arm_joint" type="revolute">
     <limit lower="-1.54" upper="0.6" effort="10" velocity="3"/>
     <axis xyz="0 1 0"/>
-    <origin xyz="-0.023 0.008 0.01825" rpy="0 3.14 0"/>
+    <origin xyz="-0.023 0.008 0.01825" rpy="0 0 0"/>
     <child link="vertical_arm"/>
     <parent link="rotating_block"/>
   </joint>
@@ -141,15 +141,15 @@
       <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
     <visual name='vertical_arm_visual'>
-      <origin xyz="0 0 -0.0515" rpy="0 0 0"/>
+      <origin xyz="0 0 0.0395" rpy="0 0 0"/>
       <geometry>
-        <box size="0.012 0.025 0.103"/>
+        <box size="0.012 0.025 0.087"/>
       </geometry>
     </visual>
     <collision name='vertical_arm_collision'>
-      <origin xyz="0 0 -0.0515" rpy="0 0 0"/>
+      <origin xyz="0 0 0.0395" rpy="0 0 0"/>
       <geometry>
-        <box size="0.012 0.025 0.103"/>
+        <box size="0.012 0.025 0.087"/>
       </geometry>
     </collision>    
 
@@ -159,7 +159,7 @@
   <joint name="vertical_arm_forearm_joint" type="revolute">
     <limit lower="-.78" upper="1.7" effort="10" velocity="3"/>
     <axis xyz="0 1 0"/>
-    <origin xyz="0 0.0 -0.103" rpy="0 -2.11 0"/>
+    <origin xyz="0 0.0 0.084" rpy="0 1 0"/>
     <parent link="vertical_arm"/>
     <child link="forearm"/>
   </joint>
@@ -170,13 +170,13 @@
       <inertia ixx="10" ixy="0.0" ixz="0.0" iyy="10" iyz="0.0" izz="10"/>
     </inertial>
     <visual name='forearm_visual'>
-      <origin xyz="0 0 -0.044" rpy="0 0 0"/>
+      <origin xyz="0 0 -0.037" rpy="0 0 0"/>
       <geometry>
         <box size="0.012 0.0305 0.088"/>
       </geometry>
     </visual>
     <collision name='forearm_collision'>
-      <origin xyz="0 0 -0.044" rpy="0 0 0"/>
+      <origin xyz="0 0 -0.037" rpy="0 0 0"/>
       <geometry>
         <box size="0.012 0.0305 0.088"/>
       </geometry>
@@ -187,7 +187,7 @@
   <joint name="actuator_forearm_joint" type="revolute">
     <limit lower="-.78" upper="1.7" effort="10" velocity="3"/>
     <axis xyz="0 1 0"/>
-    <origin xyz="0 0.0 -0.088" rpy="0 0.57 0"/>
+    <origin xyz="0 0 -0.0845" rpy="0 0.57 0"/>
     <child link="actuator_body"/>
     <parent link="forearm"/>
   </joint>
