@@ -133,6 +133,7 @@
     <origin xyz="-0.023 0.008 0.01825" rpy="0 0 0"/>
     <child link="vertical_arm"/>
     <parent link="rotating_block"/>
+    <dynamics friction="0.7"/>
   </joint>
 
   <link name='vertical_arm'>
@@ -151,7 +152,7 @@
       <geometry>
         <box size="0.012 0.025 0.087"/>
       </geometry>
-    </collision>    
+    </collision>
 
   </link>
   <!-- end vertical arm -->
@@ -162,6 +163,7 @@
     <origin xyz="0 0.0 0.084" rpy="0 1 0"/>
     <parent link="vertical_arm"/>
     <child link="forearm"/>
+    <dynamics friction="0.7"/>
   </joint>
 
   <link name='forearm'>
@@ -190,6 +192,7 @@
     <origin xyz="0 0 -0.0845" rpy="0 0.57 0"/>
     <child link="actuator_body"/>
     <parent link="forearm"/>
+    <dynamics friction="0.7"/>
   </joint>
 
   <link name='actuator_body'>
@@ -208,7 +211,7 @@
       <geometry>
         <box size="0.01 0.024 0.050"/>
       </geometry>
-    </collision>    
+    </collision>
 
   </link>
   <joint name="left_gripper_actuator_body" type="revolute">
