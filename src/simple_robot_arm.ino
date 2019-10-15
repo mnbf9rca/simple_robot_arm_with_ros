@@ -32,7 +32,7 @@ uint32_t last_time = 0;
 Servo servo[4];                                                        // holds the servo objects
 const int servoMinMax[][2] = {{0, 180}, {10, 85}, {40, 150}, {5, 40}}; // set of {min, max} values for each servo
 const int servoPins[] = {D0, D1, D2, D3};                              // which pin us each servo attached to
-const int servoDegreesOffset[] = {0, 10, 0, 0};                        // how many degrees is each servo off by
+const int servoDegreesOffset[] = {-90, 0, 0, 0};                       // how many degrees is each servo off by
 int targetAngle[] = {90, 30, 90, 20};                                  // what's the target angle for this servo
 float currentAngle[] = {0, 0, 0, 0};                                   // what's the current angle reported by the servo. Take account of range capping.
 
@@ -81,19 +81,26 @@ void updateCurrentAngles()
 /**
  * helper function to publish integers e.g. for debugging
  */
-void publishInt(const char *name, int integer)
+void publishNumber(const char *name, int integer)
+{
+  publishNumber(name, (float)integer);
+}
+
+void publishNumber(const char *name, float value)
 {
   char *buf;
-  buf = (char *)malloc(snprintf(NULL, 0, "%d", integer));
+  size_t bufz = snprintf(NULL, 0, "%f", value) * sizeof(char);
+  buf = (char *)malloc(bufz);
   if (buf == NULL)
   {
-    publishChar("Out of memory", "publishInt");
+    publishChar("Out of memory", "publishNumber");
     return;
   }
-  sprintf(buf, "%d", integer);
+  snprintf(buf, bufz, "%f", value);
   publishChar(name, buf);
   free(buf);
 }
+
 /**
  * helper function to publish chars e.g. for debugging
  */
@@ -118,14 +125,14 @@ bool validateReceivedMessage(char *const &instruction, int(*cx), const int(*inst
 {
   if ((*cx < 0) || (*cx > *instructionAlloc - 1)) //less 1 for \n
   {
-    publishInt("Message contains too many characters", *cx);
+    publishNumber("Message contains too many characters", *cx);
     return false;
   }
 
   // minimum instruction size is 3: 0/0
   if (*cx < 3)
   {
-    publishInt("Message contains too few characters", *cx);
+    publishNumber("Message contains too few characters", *cx);
     return false;
   }
   // pull 1st char and cast to int
@@ -134,7 +141,12 @@ bool validateReceivedMessage(char *const &instruction, int(*cx), const int(*inst
     publishChar("first character not digit", &instruction[0]);
     return false;
   }
-
+  // check first digit is < 4
+  if ((instruction[0] - '0') > 3)
+  {
+    publishChar("servo integer out of range", &instruction[0]);
+    return false;
+  }
   // check that 2nd char is /
   if (!(instruction[1] == '/'))
   {
@@ -169,10 +181,10 @@ void extractServoAndSetAngle(char *const &instruction, int(*cx), const int(*inst
 
   buf[sizeof(buf) - 1] = '\0'; //remember to null terminate string
   int servoToSet = instruction[0] - '0';
-  // publishInt("found servo", servoToSet);
+  // publishNumber("found servo", servoToSet);
   targetAngle[servoToSet] = atoi(buf);
 
-  // publishInt("setting to", targetAngle[servoToSet]);
+  // publishNumber("setting to", targetAngle[servoToSet]);
   setServos();
 }
 
@@ -216,18 +228,14 @@ int getAdjustedServoAngle(const int servoID)
 {
   return currentAngle[servoID] + servoDegreesOffset[servoID];
 }
+/**
+ * calculates the current rotation of the base
+ * 0 is in the middle; returns servo0 angle rotated
+ */
 int calculateBaseAngle()
 {
-  return getAdjustedServoAngle(0) + 270;
-}
-/**
- * calculates the current angle of the vertical_arm
- * servo2 directly sets vertical_arm angle. It just needs to be rotated.
- */
-int calculateVerticalArmAngle()
-{
-  // this is the raw angle set by servo 2 rotated
-  return getAdjustedServoAngle(2) + 270;
+  return (getAdjustedServoAngle(0)) % 360;
+  ;
 }
 /**
  * calculates the current angle of the forearm
@@ -236,9 +244,28 @@ int calculateVerticalArmAngle()
  */
 int calculateForearmAngle()
 {
+  TODO this doesnt work yet
   // this is the angle of servo 1 adjusted for the angle of servo 2
   // where servo 2 = 90, the angle = servo1
-  return getAdjustedServoAngle(1) + (calculateVerticalArmAngle() - 90);
+  return (getAdjustedServoAngle(1) + abs(calculateVerticalArmAngle())) % 360;
+}
+/**
+ * calculates the current angle of the vertical_arm
+ * servo2 directly sets vertical_arm angle. It just needs to be rotated.
+ */
+int calculateVerticalArmAngle()
+{
+  // this is the raw angle set by servo 2 rotated
+  return (90 - getAdjustedServoAngle(2)) % 360;
+}
+
+/**
+ * calculates the current angle of the actuator WRT the forearm
+ * should be teh same as 180 - forearm angle 
+  */
+int calculateActuatorAngle()
+{
+  return (180 - calculateForearmAngle()) % 360;
 }
 /**
  * publishes the current joint angles to joint_state
@@ -254,7 +281,7 @@ void publishJointAngles()
   computedAngle[0] = degToRad(calculateBaseAngle());
   computedAngle[1] = degToRad(calculateVerticalArmAngle());
   computedAngle[2] = degToRad(calculateForearmAngle());
-  computedAngle[3] = computedAngle[2]+90;
+  computedAngle[3] = degToRad(calculateActuatorAngle());
 
   joint_msg.header.stamp = nh.now();
   joint_msg.name = jointNames;
