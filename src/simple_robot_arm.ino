@@ -10,6 +10,8 @@
 //                                                    //
 /******************************************************/
 
+#include <string.h>
+
 // ROS includes
 #define ROSSERIAL_ARDUINO_TCP
 #include <ros.h>
@@ -27,35 +29,58 @@ uint16_t period = 1000;
 uint32_t last_time = 0;
 
 // Servo parameters
-Servo servo[4];                                                  // holds the servo objects
-int servoMinMax[][2] = {{0, 180}, {30, 80}, {60, 150}, {5, 40}}; //set of {min, max} values for each servo
-int servoPins[] = {D0, D1, D2, D3};                              // which pin us each servo attached to
-
-int targetAngle[] = {90, 30, 90, 20};
+Servo servo[4];                                                        // holds the servo objects
+const int servoMinMax[][2] = {{0, 180}, {10, 85}, {40, 150}, {5, 40}}; // set of {min, max} values for each servo
+const int servoPins[] = {D0, D1, D2, D3};                              // which pin us each servo attached to
+const int servoDegreesOffset[] = {0, 10, 0, 0};                        // how many degrees is each servo off by
+int targetAngle[] = {90, 30, 90, 20};                                  // what's the target angle for this servo
+float currentAngle[] = {0, 0, 0, 0};                                   // what's the current angle reported by the servo. Take account of range capping.
 
 // joints
-char *jointNames[] = {"base_block_rotating_block_joint",
-                      "rotating_block_vertical_arm_joint",
-                      "vertical_arm_forearm_joint",
-                      "actuator_forearm_joint"};
+#define J1_NAME "base_block_rotating_block_joint"
+#define J2_NAME "rotating_block_vertical_arm_joint"
+#define J3_NAME "vertical_arm_forearm_joint"
+#define J4_NAME "actuator_forearm_joint"
+#define NUMBER_OF_JOINTS 4
 
-int number_of_joints = sizeof(jointNames);
-float currentAngle[] = {0, 0, 0, 0};
+char *jointNames[NUMBER_OF_JOINTS]; // hold joint names
+
+// misc
+#ifndef M_PI
+#define M_PI 3.14159265358979323846264338327950288
+#endif
 
 // ROS handlers
 ros::NodeHandle nh;
-
+/**
+ * converts degrees to radians
+ */
+inline double degToRad(int degrees)
+{
+  return degrees * (M_PI / 180.0);
+}
+/**
+ * converts radians to degrees
+ */
+inline double radToDeg(int radians)
+{
+  return radians * (180.0 / M_PI);
+}
+/**
+ * stores the currently set joint angle in currentAngle
+ * taking account of clamping
+ */
 void updateCurrentAngles()
 {
-  // updates the currentAngle with the current servo value
-  // NB this is not complete. Joint angles need to be computed
   for (int i = 0; i < 4; i++)
   {
     currentAngle[i] = servo[i].read();
   }
 }
 
-// helper function to publish integers e.g. for debugging
+/**
+ * helper function to publish integers e.g. for debugging
+ */
 void publishInt(const char *name, int integer)
 {
   char *buf;
@@ -69,7 +94,9 @@ void publishInt(const char *name, int integer)
   publishChar(name, buf);
   free(buf);
 }
-
+/**
+ * helper function to publish chars e.g. for debugging
+ */
 void publishChar(const char *name, const char *message)
 {
   Particle.publish(name, message, 0, PRIVATE);
@@ -79,7 +106,14 @@ int midpoint(int minimum, int maximum)
 {
   return minimum + ((maximum - minimum) / 2);
 }
-
+/**
+ * checks that the received message is syntatically correct
+ * i.e. is d/d[d[d]]
+ * 
+ * @instruction - the received text
+ * @cx output of snprintf
+ * @instructionAlloc size allocated to receive instruction
+ */
 bool validateReceivedMessage(char *const &instruction, int(*cx), const int(*instructionAlloc))
 {
   if ((*cx < 0) || (*cx > *instructionAlloc - 1)) //less 1 for \n
@@ -119,6 +153,13 @@ bool validateReceivedMessage(char *const &instruction, int(*cx), const int(*inst
   return true;
 }
 
+/**
+ * takes an instruction and executes it
+ * 
+ * @instruction - the received text
+ * @cx output of snprintf
+ * @instructionAlloc size allocated to receive instruction
+ */
 void extractServoAndSetAngle(char *const &instruction, int(*cx), const int(*instructionAlloc))
 {
 
@@ -136,7 +177,10 @@ void extractServoAndSetAngle(char *const &instruction, int(*cx), const int(*inst
 }
 
 // ROS
-
+/**
+ * particle function callback
+ * receives string with servo angle instruction and tries to execute it
+ */
 void servo_cb(const std_msgs::String &cmd_msg)
 {
   // expecting it to be int/int e.g. 1/120 to set servo 1 to 120
@@ -160,7 +204,45 @@ ros::Subscriber<std_msgs::String> sub("servo", servo_cb);
 sensor_msgs::JointState joint_msg;
 std_msgs::String str_msg;
 
-ros::Publisher joint_publisher("test", &joint_msg);
+ros::Publisher joint_publisher("joint_states", &joint_msg);
+/**
+ * returns the current angle represnted by a servo adjusted for offset
+ * typically, offset is measured empircally and configured
+ * 
+ * @servoID the ID of the specific servo to measure
+ * 
+ */
+int getAdjustedServoAngle(const int servoID)
+{
+  return currentAngle[servoID] + servoDegreesOffset[servoID];
+}
+int calculateBaseAngle()
+{
+  return getAdjustedServoAngle(0) + 270;
+}
+/**
+ * calculates the current angle of the vertical_arm
+ * servo2 directly sets vertical_arm angle. It just needs to be rotated.
+ */
+int calculateVerticalArmAngle()
+{
+  // this is the raw angle set by servo 2 rotated
+  return getAdjustedServoAngle(2) + 270;
+}
+/**
+ * calculates the current angle of the forearm
+ * This is based on the angle of servo1 adjusted for the angle of servo2
+ * servo2 directly sets vertical_arm angle
+ */
+int calculateForearmAngle()
+{
+  // this is the angle of servo 1 adjusted for the angle of servo 2
+  // where servo 2 = 90, the angle = servo1
+  return getAdjustedServoAngle(1) + (calculateVerticalArmAngle() - 90);
+}
+/**
+ * publishes the current joint angles to joint_state
+ */
 void publishJointAngles()
 {
   if (!nh.connected())
@@ -168,14 +250,18 @@ void publishJointAngles()
     return;
   }
   updateCurrentAngles();
+  float computedAngle[NUMBER_OF_JOINTS];
+  computedAngle[0] = degToRad(calculateBaseAngle());
+  computedAngle[1] = degToRad(calculateVerticalArmAngle());
+  computedAngle[2] = degToRad(calculateForearmAngle());
+  computedAngle[3] = computedAngle[2]+90;
+
   joint_msg.header.stamp = nh.now();
   joint_msg.name = jointNames;
-  joint_msg.name_length = 4;
-  joint_msg.position = currentAngle;
-  joint_msg.position_length = 4;
+  joint_msg.name_length = NUMBER_OF_JOINTS;
+  joint_msg.position = computedAngle;
+  joint_msg.position_length = NUMBER_OF_JOINTS;
   joint_publisher.publish(&joint_msg);
-  publishInt("here", 8);
-  // 1 = size of message queue
 }
 
 // servo control
@@ -263,12 +349,18 @@ void setup()
   Particle.variable("targetAngle[1]", targetAngle[1]);
   Particle.variable("targetAngle[2]", targetAngle[2]);
   Particle.variable("targetAngle[3]", targetAngle[3]);
-  /*
-  Particle.variable("currentAngle[0]", currentAngle[0]);
-  Particle.variable("currentAngle[1]", currentAngle[1]);
-  Particle.variable("currentAngle[2]", currentAngle[2]);
-  Particle.variable("currentAngle[3]", currentAngle[3]);
-  */
+
+  // copy joint names to non const and store pointer in jointNames[]
+  char *s;
+  s = strdup(J1_NAME);
+  jointNames[0] = s;
+  s = strdup(J2_NAME);
+  jointNames[1] = s;
+  s = strdup(J3_NAME);
+  jointNames[2] = s;
+  s = strdup(J4_NAME);
+  jointNames[3] = s;
+
   pinMode(D7, OUTPUT);
   toggleServos();
 }
@@ -288,7 +380,7 @@ bool didAttachServer(bool result, uint16_t pin)
   return result;
 }
 
-int boundValue(int *receivedValue, int *minValue, int *maxValue)
+int boundValue(const int *receivedValue, const int *minValue, const int *maxValue)
 {
   if (*receivedValue > *maxValue)
   {
