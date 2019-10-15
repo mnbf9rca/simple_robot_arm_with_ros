@@ -46,3 +46,5 @@ uint16 target_angle
 
 notes:
 incorporates https://github.com/wojiaojiao/pegasus_gazebo_plugins
+
+# Joint angle between `vertical_arm` and `forearm`

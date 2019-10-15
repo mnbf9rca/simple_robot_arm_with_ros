@@ -2,24 +2,12 @@
 
 <launch>
 
-    <arg name="world" default="empty"/>
-    <arg name="paused" default="false"/>
-    <arg name="use_sim_time" default="true"/>
-    <arg name="gui" default="true"/>
-    <arg name="headless" default="false"/>
-    <arg name="debug" default="false"/>
 
-    <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="world_name" value="$(find training_world)/worlds/training.world"/>
-        <arg name="paused" value="$(arg paused)"/>
-        <arg name="use_sim_time" value="$(arg use_sim_time)"/>
-        <arg name="gui" value="$(arg gui)"/>
-        <arg name="headless" value="$(arg headless)"/>
-        <arg name="debug" value="$(arg debug)"/>
-    </include>
+    <!--<include file="$(find training_world)/launch/training_world_gazebo.launch"/>-->
     <!--spawn a robot in gazebo world-->
     <include file="$(find simple_arm)/launch/simple_arm_xacro.launch"/>
-
+        <!-- Send robot states to tf -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen"/>
     <!-- RVIz -->
     <!--launch rviz-->
     <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find training_world)/rviz/simple.rviz"/>
