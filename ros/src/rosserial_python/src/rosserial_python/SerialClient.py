@@ -304,7 +304,7 @@ class RosSerialServer:
             sent = self.socket.send(data[totalsent:])
             if sent == 0:
                 raise RuntimeError("RosSerialServer.write() socket connection broken")
-            totalsent = totalsent + sent
+            totalsent += sent
 
     def read(self, rqsted_length):
         self.msg = ''
@@ -315,7 +315,7 @@ class RosSerialServer:
             chunk = self.socket.recv(rqsted_length - len(self.msg))
             if chunk == '':
                 raise RuntimeError("RosSerialServer.read() socket connection broken")
-            self.msg = self.msg + chunk
+            self.msg += chunk
         return self.msg
 
     def inWaiting(self):
@@ -388,30 +388,32 @@ class SerialClient(object):
         self.protocol_ver2 = '\xfe'
         self.protocol_ver = self.protocol_ver2
 
-        self.publishers = dict()  # id:Publishers
-        self.subscribers = dict()  # topic:Subscriber
-        self.services = dict()    # topic:Service
+        self.publishers = {}
+        self.subscribers = {}
+        self.services = {}
 
         self.buffer_out = -1
         self.buffer_in = -1
 
-        self.callbacks = dict()
-        # endpoints for creating new pubs/subs
-        self.callbacks[TopicInfo.ID_PUBLISHER] = self.setupPublisher
-        self.callbacks[TopicInfo.ID_SUBSCRIBER] = self.setupSubscriber
-        # service client/servers have 2 creation endpoints (a publisher and a subscriber)
-        self.callbacks[TopicInfo.ID_SERVICE_SERVER +
-                       TopicInfo.ID_PUBLISHER] = self.setupServiceServerPublisher
-        self.callbacks[TopicInfo.ID_SERVICE_SERVER +
-                       TopicInfo.ID_SUBSCRIBER] = self.setupServiceServerSubscriber
-        self.callbacks[TopicInfo.ID_SERVICE_CLIENT +
-                       TopicInfo.ID_PUBLISHER] = self.setupServiceClientPublisher
-        self.callbacks[TopicInfo.ID_SERVICE_CLIENT +
-                       TopicInfo.ID_SUBSCRIBER] = self.setupServiceClientSubscriber
-        # custom endpoints
-        self.callbacks[TopicInfo.ID_PARAMETER_REQUEST] = self.handleParameterRequest
-        self.callbacks[TopicInfo.ID_LOG] = self.handleLoggingRequest
-        self.callbacks[TopicInfo.ID_TIME] = self.handleTimeRequest
+        self.callbacks = {
+            TopicInfo.ID_PUBLISHER: self.setupPublisher,
+            TopicInfo.ID_SUBSCRIBER: self.setupSubscriber,
+            (
+                TopicInfo.ID_SERVICE_SERVER + TopicInfo.ID_PUBLISHER
+            ): self.setupServiceServerPublisher,
+            (
+                TopicInfo.ID_SERVICE_SERVER + TopicInfo.ID_SUBSCRIBER
+            ): self.setupServiceServerSubscriber,
+            (
+                TopicInfo.ID_SERVICE_CLIENT + TopicInfo.ID_PUBLISHER
+            ): self.setupServiceClientPublisher,
+            (
+                TopicInfo.ID_SERVICE_CLIENT + TopicInfo.ID_SUBSCRIBER
+            ): self.setupServiceClientSubscriber,
+            TopicInfo.ID_PARAMETER_REQUEST: self.handleParameterRequest,
+            TopicInfo.ID_LOG: self.handleLoggingRequest,
+            TopicInfo.ID_TIME: self.handleTimeRequest,
+        }
 
         rospy.sleep(2.0)
         self.requestTopics()
@@ -612,7 +614,7 @@ class SerialClient(object):
         try:
             msg = TopicInfo()
             msg.deserialize(data)
-            if not msg.topic_name in self.subscribers.keys():
+            if msg.topic_name not in self.subscribers.keys():
                 sub = Subscriber(msg, self)
                 self.subscribers[msg.topic_name] = sub
                 self.setSubscribeSize(msg.buffer_size)
@@ -743,7 +745,7 @@ class SerialClient(object):
             if t != type(p):
                 rospy.logerr('All Paramers in the list %s must be of the same type' % req.name)
                 return
-        if t == int or t == bool:
+        if t in [int, bool]:
             resp.ints = param
         if t == float:
             resp.floats = param
@@ -794,7 +796,11 @@ class SerialClient(object):
             # modified frame : header(2 bytes) + msg_len(2 bytes) + msg_len_chk(1 byte) + topic_id(2 bytes) + msg(x bytes) + msg_topic_id_chk(1 byte)
             # second byte of header is protocol version
             msg_len_checksum = 255 - (((length & 255) + (length >> 8)) % 256)
-            msg_checksum = 255 - (((topic & 255) + (topic >> 8) + sum([ord(x) for x in msg])) % 256)
+            msg_checksum = (
+                255
+                - ((topic & 255) + (topic >> 8) + sum(ord(x) for x in msg)) % 256
+            )
+
             data = "\xff" + self.protocol_ver + \
                 chr(length & 255) + chr(length >> 8) + \
                 chr(msg_len_checksum) + chr(topic & 255) + chr(topic >> 8)
